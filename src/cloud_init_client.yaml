@@ -24,6 +24,10 @@ write_files:
     }
   path: /run/cloud-init/consul/client/consul_client_location.json
 - content: |
+    ${consul_cert_bundle}
+  encoding: base64
+  path: /run/cloud-init/consul/certs/consul_cert_bundle.crt
+- content: |
     #
     # See unbound.conf(5) man page, version 1.6.3.
     #

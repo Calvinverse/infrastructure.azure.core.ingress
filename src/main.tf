@@ -93,7 +93,7 @@ locals {
 locals {
   common_tags = {
     category    = "${var.category}"
-    datacenter  = "${var.datacenter}"
+    datacenter  = "${var.datacenter}-${var.spoke_id}"
     environment = "${var.environment}"
     image_version = "${var.resource_version}"
     location    = "${var.location}"
@@ -169,7 +169,6 @@ resource "azurerm_lb" "lb" {
         local.extra_tags,
         var.tags,
         {
-            "datacenter" = var.datacenter
         } )
 }
 
@@ -190,13 +189,25 @@ resource "azurerm_lb_probe" "lb_probe" {
     resource_group_name = azurerm_resource_group.rg.name
 }
 
-resource "azurerm_lb_rule" "lb_rule" {
+resource "azurerm_lb_rule" "lb_rule_http" {
     backend_port = 80
     backend_address_pool_id = azurerm_lb_backend_address_pool.lb.id
     frontend_ip_configuration_name = "${local.name_prefix_tf}-lb-ipc"
     frontend_port = 80
     loadbalancer_id = azurerm_lb.lb.id
-    name = "Proxy"
+    name = "Http"
+    protocol = "Tcp"
+    probe_id = azurerm_lb_probe.lb_probe.id
+    resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_lb_rule" "lb_rule_ui" {
+    backend_port = 9998
+    backend_address_pool_id = azurerm_lb_backend_address_pool.lb.id
+    frontend_ip_configuration_name = "${local.name_prefix_tf}-lb-ipc"
+    frontend_port = 9998
+    loadbalancer_id = azurerm_lb.lb.id
+    name = "Fabio-UI"
     protocol = "Tcp"
     probe_id = azurerm_lb_probe.lb_probe.id
     resource_group_name = azurerm_resource_group.rg.name
@@ -213,6 +224,10 @@ resource "azurerm_lb_rule" "lb_rule" {
 #     ttl = 300
 #     records = ["10.0.180.17"]
 # }
+
+#
+# Certificate for the DNS record
+#
 
 #
 # PROXY SERVER
@@ -240,7 +255,8 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss_proxy" {
         "${abspath(path.root)}/cloud_init_client.yaml",
         {
             cluster_size = var.cluster_size,
-            datacenter = var.datacenter,
+            consul_cert_bundle = filebase64("${var.consul_cert_path}/${var.domain_consul}-agent-ca.pem"),
+            datacenter = "${var.datacenter}-${var.spoke_id}",
             domain = var.domain_consul,
             encrypt = var.encrypt_consul,
             environment_id = local.service_discovery_base_name,
@@ -295,13 +311,13 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss_proxy" {
         local.extra_tags,
         var.tags,
         {
-            "datacenter" = var.datacenter
         } )
 
     upgrade_mode = "Manual" # Use blue-green approach to upgrades
 
     depends_on = [
-        azurerm_lb_rule.lb_rule,
+        azurerm_lb_rule.lb_rule_http,
+        azurerm_lb_rule.lb_rule_ui,
     ]
 }
 

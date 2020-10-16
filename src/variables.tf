@@ -26,8 +26,13 @@ variable "category" {
     description = "The name of the category that all the resources are running in."
 }
 
+variable "consul_cert_path" {
+    description = "The path to the directory in which the consul certificates are placed."
+    type = string
+}
+
 variable "datacenter" {
-    default = "calvinverse-test"
+    default = "calvinverse"
     description = "The name of the environment that all the resources are running in. Used as the name of the Consul data center"
 }
 
@@ -80,7 +85,7 @@ variable "meta_version" {
 
 variable "spoke_id" {
     default = "01"
-    description = "The ID of the spoke into which the consul server cluster should be placed."
+    description = "The ID of the spoke into which the proxy cluster should be placed."
 }
 
 #

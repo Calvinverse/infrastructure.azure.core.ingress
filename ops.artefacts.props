@@ -186,6 +186,7 @@
     </PropertyGroup>
     <ItemGroup Condition=" '$(ShouldLoadTerraformPlansToBuild)' == 'true' AND '@(TerraformPlansToBuild)' == '' ">
         <TerraformPlansToBuild Include="$(DirBuildPlans)\hub">
+            <consul_cert_path>$(DirConsulCertificates.Replace('\','/'))</consul_cert_path>
             <environment>$(Environment)</environment>
             <subscription_production>$(AzureSubscriptionProduction)</subscription_production>
             <subscription_test>$(AzureSubscriptionTest)</subscription_test>
