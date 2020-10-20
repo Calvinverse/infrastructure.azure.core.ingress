@@ -78,5 +78,3 @@ Once you are signed in run the Terraform [plan](https://www.terraform.io/docs/co
 When you are happy with the plan execute the plan with the Terraform [apply](https://www.terraform.io/docs/commands/apply.html) command.
 
     tf apply ./build/tf/plan
-
-
